@@ -1,0 +1,14 @@
+# baud_workspace/Cargo.toml
+
+[workspace]
+members = [
+    "baud-core",
+    "baud-cli",
+    "baud", # This is the TUI 'main' binary
+]
+
+resolver = "2"
+
+[profile.release]
+lto = true
+opt-level = 3
