@@ -5,10 +5,16 @@ version = 3
 [[package]]
 name = "baud"
 version = "0.1.0"
+dependencies = [
+ "baud-core",
+]
 
 [[package]]
 name = "baud-cli"
 version = "0.1.0"
+dependencies = [
+ "baud-core",
+]
 
 [[package]]
 name = "baud-core"
