@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 serialport = "4.3.0"
+tokio = "1.36.0"
 tokio-serial = "5.4.4"
