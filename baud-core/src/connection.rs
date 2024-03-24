@@ -13,7 +13,7 @@ impl SerialConnection {
             .flow_control(FlowControl::None)
             .parity(Parity::None)
             .stop_bits(StopBits::One)
-            .timeout(Duration::from_millis(10))
+            .timeout(std::time::Duration::from_secs(5))
             .open_native_async()?;
 
         Ok(Self { port: stream })
@@ -23,7 +23,7 @@ impl SerialConnection {
     pub async fn read_data(&mut self) -> io::Result<Vec<u8>> {
         let mut buffer = Vec::new();
         let mut temp_buffer = [0u8; 1024];
-        let n = self.stream.read(&mut temp_buffer).await?;
+        let n = self.port.read(&mut temp_buffer).await?;
         if n > 0 {
             buffer.extend_from_slice(&temp_buffer[..n]);
         }
@@ -32,6 +32,6 @@ impl SerialConnection {
 
     /// Writes data to the serial port from the provided buffer.
     pub async fn write_data(&mut self, data: &[u8]) -> io::Result<()> {
-        self.stream.write_all(data).await
+        self.port.write_all(data).await
     }
 }
