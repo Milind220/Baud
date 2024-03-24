@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 baud-core = { path = "../baud-core" }
+clap = "4.5.3"
+tokio = { version = "1.36.0", features = ["full"] }   # TODO: Edit to only use the necessary features
