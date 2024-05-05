@@ -1,9 +1,9 @@
-use baud_core::serial::SerialPortInfo;
 use crate::AppState;
+use baud_core::serial::SerialPortInfo;
 use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
     Frame,
 };
 
@@ -28,6 +28,10 @@ pub fn draw_main_layout(f: &mut Frame, available_ports: &[SerialPortInfo], state
     .highlight_style(Style::default().add_modifier(Modifier::BOLD))
     .highlight_symbol("> ");
 
+    let mut list_state = ListState::default();
+    list_state.select(Some(state.selected_index));
+    f.render_stateful_widget(serial_port_list.clone(), main_layout[0], &mut list_state);
+
     // Create the data display area
     let data_display = Paragraph::new(String::from_utf8_lossy(&state.received_data))
         .block(Block::default().title("Data").borders(Borders::ALL))
@@ -35,7 +39,11 @@ pub fn draw_main_layout(f: &mut Frame, available_ports: &[SerialPortInfo], state
 
     // Create the filters and settings area
     let filters_settings = Paragraph::new("Filters and settings will be displayed here")
-        .block(Block::default().title("Filters & Settings").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title("Filters & Settings")
+                .borders(Borders::ALL),
+        )
         .style(Style::default().fg(Color::White));
 
     // Create the data input area
@@ -62,3 +70,4 @@ pub fn draw_main_layout(f: &mut Frame, available_ports: &[SerialPortInfo], state
     f.render_widget(filters_settings, right_layout[1]);
     f.render_widget(data_input, right_layout[2]);
 }
+
