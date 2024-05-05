@@ -2,13 +2,14 @@ mod ui;
 
 use baud_core::connection::SerialConnection;
 use baud_core::serial::list_available_ports;
+use crossterm::event::{self, Event, KeyCode};
 use crossterm::{
     execute,
     terminal::{self, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use crossterm::event::{self, Event, KeyCode};
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io;
+use std::sync::{Arc, Mutex};
 use tokio;
 
 struct AppState {
@@ -30,16 +31,33 @@ async fn main() -> Result<(), io::Error> {
     let available_ports = list_available_ports().unwrap();
 
     // Create a state to store the selected port and received data
-    let mut state = AppState {
+    let state = Arc::new(Mutex::new(AppState {
         selected_port: None,
         received_data: Vec::new(),
         selected_index: 0,
-    };
+    }));
+
+    let state_clone = Arc::clone(&state);
+
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<String>(10);
+
+    tokio::spawn(async move {
+        while let Some(port_name) = rx.recv().await {
+            if let Ok(mut connection) = SerialConnection::connect(&port_name, 9600).await {
+                if let Ok(data) = connection.read_data().await {
+                    // Update the application state with the received data
+                    let mut state = state_clone.lock().unwrap();
+                    state.received_data = data;
+                }
+            }
+        }
+    });
 
     // Run the main loop
     loop {
         terminal.draw(|f| {
             // Call the draw_main_layout function from the ui module
+            let state = state.lock().unwrap();
             ui::draw_main_layout(f, &available_ports, &state);
         })?;
 
@@ -50,22 +68,25 @@ async fn main() -> Result<(), io::Error> {
                     break;
                 }
                 KeyCode::Up => {
+                    let mut state = state.lock().unwrap();
                     if state.selected_index > 0 {
                         state.selected_index -= 1;
                     }
                 }
                 KeyCode::Down => {
+                    let mut state = state.lock().unwrap();
                     if state.selected_index < available_ports.len() - 1 {
                         state.selected_index += 1;
                     }
                 }
                 KeyCode::Enter => {
+                    let mut state = state.lock().unwrap();
                     if let Some(port) = available_ports.get(state.selected_index) {
                         state.selected_port = Some(port.name.clone());
-                        // Establish serial connection and receive data
-                        let mut connection = SerialConnection::connect(&port.name, 9600).await?;
-                        let data = connection.read_data().await?;
-                        state.received_data = data;
+                        // Send the selected port name to the serial task
+                        tx.send(port.name.clone())
+                            .await
+                            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
                     }
                 }
                 _ => {} // Catch-all pattern to handle the remaining variants
