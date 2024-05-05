@@ -2,6 +2,10 @@ mod ui;
 
 use baud_core::connection::SerialConnection;
 use baud_core::serial::list_available_ports;
+use crossterm::{
+    execute,
+    terminal::{self, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use crossterm::event::{self, Event, KeyCode};
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io;
@@ -16,7 +20,9 @@ struct AppState {
 #[tokio::main]
 async fn main() -> Result<(), io::Error> {
     // Set up the terminal
-    let stdout = io::stdout();
+    let mut stdout = io::stdout();
+    terminal::enable_raw_mode()?;
+    execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -66,7 +72,8 @@ async fn main() -> Result<(), io::Error> {
             }
         }
     }
+    terminal::disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
 
     Ok(())
 }
-
