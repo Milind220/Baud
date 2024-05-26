@@ -2,7 +2,6 @@
 
 [workspace]
 members = [
-    "baud-core",
     "baud-cli",
     "baud", # This is the TUI 'main' binary
 ]
