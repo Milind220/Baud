@@ -54,7 +54,11 @@ async fn run_app(
             match event.code {
                 KeyCode::Char('q') => {
                     return Ok(());
-                },
+                }
+                // catch Ctrl+C
+                KeyCode::Char('c') if event.modifiers.contains(event::KeyModifiers::CONTROL) => {
+                    return Ok(());
+                }
                 _ => {}
             }
         }
