@@ -5,7 +5,13 @@ use crossterm::{
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io;
-use tokio::signal::ctrl_c;
+
+// TODO: Implement the ui 
+// TODO: Get list of ports and display them
+// TODO: Make it possible to select a port and connect to it
+// TODO: Show port data in the right pane
+// TODO: Implement a way to send data to the port
+// TODO: Implement a way to save the data to a file
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,15 +21,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-
-    // Set up a channel to listen for SIGINT (Ctrl+C)
-    let ctrl_c_signal = ctrl_c();
-    tokio::spawn(async move {
-        ctrl_c_signal.await.expect("Failed to listen for Ctrl+C");
-        disable_raw_mode().unwrap();
-        execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture).unwrap();
-        std::process::exit(0);
-    });
 
     // Run the TUI app
     if let Err(e) = run_app(&mut terminal).await {
@@ -44,7 +41,7 @@ async fn run_app(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     loop {
-        terminal.draw(|f| {
+        terminal.draw(|_f| {
             // Implement layout and widgets here
         })?;
 
